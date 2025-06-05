@@ -1,0 +1,233 @@
+diff --git a/recipes/arrow/all/conanfile.py b/recipes/arrow/all/conanfile.py
+index ae6edd350..103b82b78 100644
+--- a/recipes/arrow/all/conanfile.py
++++ b/recipes/arrow/all/conanfile.py
+@@ -259,9 +259,10 @@ class ArrowConan(ConanFile):
+         if self.options.parquet and not self.options.with_thrift:
+             raise ConanInvalidConfiguration("arrow:parquet requires arrow:with_thrift")
+ 
+-    def build_requirements(self):
+-        if Version(self.version) >= "13.0.0":
+-            self.tool_requires("cmake/[>=3.16 <4]")
++    if os.uname().machine != 's390x':
++        def build_requirements(self):
++            if Version(self.version) >= "13.0.0":
++                self.tool_requires("cmake/[>=3.16 <4]")
+ 
+     def source(self):
+         get(self, **self.conan_data["sources"][self.version],
+diff --git a/recipes/benchmark/all/conanfile.py b/recipes/benchmark/all/conanfile.py
+index 741a672cf..b6c45cc25 100644
+--- a/recipes/benchmark/all/conanfile.py
++++ b/recipes/benchmark/all/conanfile.py
+@@ -65,8 +65,9 @@ class BenchmarkConan(ConanFile):
+         if self.options.get_safe("enable_libpfm"):
+             self.requires("libpfm4/4.13.0")
+ 
+-    def build_requirements(self):
+-        self.tool_requires("cmake/[>=3.16.3 <4]")
++    if os.uname().machine != 's390x': 
++        def build_requirements(self):
++            self.tool_requires("cmake/[>=3.16.3 <4]")
+ 
+     def _patch_sources(self):
+         replace_in_file(self,
+@@ -133,4 +134,10 @@ class BenchmarkConan(ConanFile):
+         self.cpp_info.components["benchmark_main"].requires = ["_benchmark"]
+ 
+         # workaround to have all components in CMakeDeps of downstream recipes
+-        self.cpp_info.set_property("cmake_target_name", "benchmark::benchmark_main")
++        self.cpp_info.set_property("cmake_target_name", "benchmark::benchmark_main"
++
++
++
++
++                :x
++
+diff --git a/recipes/folly/all/conanfile.py b/recipes/folly/all/conanfile.py
+index 1c87aa0d5..9d6a86ee0 100755
+--- a/recipes/folly/all/conanfile.py
++++ b/recipes/folly/all/conanfile.py
+@@ -89,9 +89,10 @@ class FollyConan(ConanFile):
+         # INFO: Folly does not support fmt 11 on MSVC: https://github.com/facebook/folly/issues/2250
+         self.requires("fmt/10.2.1", transitive_headers=True, transitive_libs=True)
+ 
+-    def build_requirements(self):
+-        # INFO: Required due ZIP_LISTS CMake feature in conan_deps.cmake
+-        self.tool_requires("cmake/[>=3.17 <4]")
++    if os.uname().machine != 's390x':
++        def build_requirements(self):
++            # INFO: Required due ZIP_LISTS CMake feature in conan_deps.cmake
++            self.tool_requires("cmake/[>=3.17 <4]")
+ 
+     @property
+     def _required_boost_components(self):
+diff --git a/recipes/glog/all/conanfile.py b/recipes/glog/all/conanfile.py
+index d47735a7b..d5bb0bf40 100644
+--- a/recipes/glog/all/conanfile.py
++++ b/recipes/glog/all/conanfile.py
+@@ -61,11 +61,17 @@ class GlogConan(ConanFile):
+ 
+         check_min_cppstd(self, 14)
+ 
+-    def build_requirements(self):
+-        if Version(self.version) >= "0.7.0":
+-            self.tool_requires("cmake/[>=3.22 <4]")
+-        elif Version(self.version) >= "0.6.0":
+-            self.tool_requires("cmake/[>=3.16 <4]")
++    if os.uname().machine != 's390x':
++        def build_requirements(self):
++            if Version(self.version) >= "0.7.0":
++                self.tool_requires("cmake/[>=3.22 <4]")
++            elif Version(self.version) >= "0.6.0":
++                self.tool_requires("cmake/[>=3.16 <4]")
++    # def build_requirements(self):
++    #     if Version(self.version) >= "0.7.0":
++    #         self.tool_requires("cmake/[>=3.22 <4]")
++    #     elif Version(self.version) >= "0.6.0":
++    #         self.tool_requires("cmake/[>=3.16 <4]")
+ 
+     def source(self):
+         get(self, **self.conan_data["sources"][self.version], strip_root=True)
+diff --git a/recipes/google-cloud-cpp/all/conanfile.py b/recipes/google-cloud-cpp/all/conanfile.py
+index e54c3ef7d..e08aa13c3 100644
+--- a/recipes/google-cloud-cpp/all/conanfile.py
++++ b/recipes/google-cloud-cpp/all/conanfile.py
+@@ -65,9 +65,10 @@ class GoogleCloudCppConan(ConanFile):
+         #  there's not clean 1:1 mapping between them either way
+         # self.requires("googleapis/cci.20220531")
+ 
+-    def build_requirements(self):
+-        self.tool_requires("grpc/<host_version>")
+-        self.tool_requires("protobuf/<host_version>")
++    if os.uname().machine != 's390x':
++        def build_requirements(self):
++            self.tool_requires("grpc/<host_version>")
++            self.tool_requires("protobuf/<host_version>")
+ 
+     def validate(self):
+         if self.settings.os == "Windows" and self.options.shared:
+diff --git a/recipes/googleapis/all/conanfile.py b/recipes/googleapis/all/conanfile.py
+index 7d10eb188..9264d2535 100644
+--- a/recipes/googleapis/all/conanfile.py
++++ b/recipes/googleapis/all/conanfile.py
+@@ -71,9 +71,10 @@ class GoogleAPIS(ConanFile):
+         if self.options.shared and not self.dependencies.host["protobuf"].options.shared:
+             raise ConanInvalidConfiguration("If built as shared, protobuf must be shared as well. Please, use `protobuf:shared=True`")
+ 
+-    def build_requirements(self):
+-        if not self._is_legacy_one_profile:
+-            self.tool_requires("protobuf/<host_version>")
++    if os.uname().machine != 's390x':
++        def build_requirements(self):
++            if not self._is_legacy_one_profile:
++                self.tool_requires("protobuf/<host_version>")
+ 
+         # CMake >= 3.20 is required. There is a proto with dots in the name 'k8s.min.proto' and CMake fails to generate project files
+         self.tool_requires("cmake/[>=3.20 <4]")
+diff --git a/recipes/onetbb/all/conanfile.py b/recipes/onetbb/all/conanfile.py
+index ce8c54ce3..c9e2619db 100644
+--- a/recipes/onetbb/all/conanfile.py
++++ b/recipes/onetbb/all/conanfile.py
+@@ -99,10 +99,11 @@ class OneTBBConan(ConanFile):
+         if self._tbbbind_explicit_hwloc and not self.dependencies["hwloc"].options.get_safe("shared", True):
+             raise ConanInvalidConfiguration(f"{self.ref} requires hwloc:shared=True to be built.")
+ 
+-    def build_requirements(self):
+-        if self._tbbbind_build and not self._tbbbind_explicit_hwloc:
+-            if not self.conf.get("tools.gnu:pkg_config", check_type=str):
+-                self.tool_requires("pkgconf/2.1.0")
++    if os.uname().machine != 's390x':
++        def build_requirements(self):
++            if self._tbbbind_build and not self._tbbbind_explicit_hwloc:
++                if not self.conf.get("tools.gnu:pkg_config", check_type=str):
++                    self.tool_requires("pkgconf/2.1.0")
+ 
+     def source(self):
+         get(self, **self.conan_data["sources"][self.version], strip_root=True)
+diff --git a/recipes/rocksdb/all/conanfile.py b/recipes/rocksdb/all/conanfile.py
+index 36406c6b1..097d4f1e3 100644
+--- a/recipes/rocksdb/all/conanfile.py
++++ b/recipes/rocksdb/all/conanfile.py
+@@ -92,7 +92,7 @@ class RocksDBConan(ConanFile):
+     def validate(self):
+         check_min_cppstd(self, self._min_cppstd)
+ 
+-        if self.settings.arch not in ["x86_64", "ppc64le", "ppc64", "mips64", "armv8"]:
++        if self.settings.arch not in ["s390x", "x86_64", "ppc64le", "ppc64", "mips64", "armv8"]:
+             raise ConanInvalidConfiguration("Rocksdb requires 64 bits")
+ 
+         if is_msvc(self) and Version(self.settings.compiler.version) < "191":
+diff --git a/recipes/xsimd/all/test_package/test_package.cpp b/recipes/xsimd/all/test_package/test_package.cpp
+index ed1e514c8..4a776691a 100644
+--- a/recipes/xsimd/all/test_package/test_package.cpp
++++ b/recipes/xsimd/all/test_package/test_package.cpp
+@@ -1,4 +1,5 @@
+-#include "xsimd/xsimd.hpp"
++// #include "xsimd/xsimd.hpp"
++#include <xsimd/xsimd.hpp>
+ #include <iostream>
+ 
+ int main(int argc, char *argv[]) {
+@@ -7,11 +8,61 @@ int main(int argc, char *argv[]) {
+   xs::batch<double, 2> a(1., 1.);
+   xs::batch<double, 2> b(2., 2.);
+ #else
++  //using batch_type = xs::batch<double>;
++  // batch_type a(1.0); // Alternative to broadcast
++  // batch_type b(2.0);
++
++ 
++  //using batch_type = xs::batch<double, 2>;
++
++  //using batch_type = xs::batch<double>;  // Automatically detects correct SIMD type
++  //auto a = batch_type::broadcast(1.);
++  //auto b = batch_type::broadcast(2.);
++  //batch_type a = batch_type::broadcast(1.);  
++  //batch_type b = batch_type::broadcast(2.);
+   auto a = xs::broadcast(1.);
+   auto b = xs::broadcast(2.);
++  //auto a = xsimd::broadcast(1.);
++  //auto b = xsimd::broadcast(2.);
+ #endif
+ 
+   auto mean = (a + b) / 2.;
+   std::cout << "Mean: " << mean << std::endl;
+   return 0;
+ }
++
++
++                                                                                                                                                                                                                    
++                                                                                                                                                                                                                                                                                                                                                                                                                                        
++                                                                                                                                                                                                                     
++
++                                                                                                                                                                                                                    
++                                                                                                                                                                                                                    
++                                                                                                                                                                                                                    
++                                                                                                                                                                                                                    
++                                                                                                                                                                                                                    
++                                                                                                                                                                                                                    
++                                                                                                                                                                                                                    
++                                                                                                                                                                                                                    
++                                                                                                                                                                                                                    
++                                                                                                                                                                                                                    
++                                                                                                                                                                                                                    
++                                                                                                                                                                                                                    
++                                                                                                                                                                                                                    
++                                                                                                                                                                                                                    
++                                                                                                                                                                                                                    
++                                                                                                                                                                                                                    
++                                                                                                                                                                                                                    
++                                                                                                                                                                                                                    
++                                                                                                                                                                                                                    
++                                                                                                                                                                                                                    
++                                                                                                                                                                                                                    
++                                                                                                                                                                                                                    
++                                                                                                                                                                                                                    
++                                                                                                                                                                                                                    
++                                                                                                                                                                                                                    
++                                                                                                                                                                                                                    
++                                                                                                                                                                                                                    
++                                                                                                                                                                                                                    
++                                                                                                                                                                                                               
++                                                                                                                                                                         
